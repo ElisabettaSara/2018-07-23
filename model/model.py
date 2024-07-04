@@ -7,38 +7,37 @@ from database.DAO import DAO
 
 class Model:
     def __init__(self):
-        self.listAnni = []
+        self._grafo = nx.Graph()
+        self.idMap={}
 
-        self.graph = nx.Graph()
-        self.nodes = []
-        self.edges = []
-        self.idMap = {}
 
-        self.loadAnni()
+    def getAnni(self):
+        return DAO.getAnno()
 
-    def loadAnni(self):
-        self.listAnni = DAO.getAnni()
 
-    def buildGraph(self, anno, giorni):
-        self.graph.clear()
-        self.nodes = DAO.getNodes()
-        self.graph.add_nodes_from(self.nodes)
-        for n in self.nodes:
-            self.idMap[n.id] = n
+    def creaGrafo(self, anno, giorni):
+        nodi= DAO.getNodi()
+        for n in nodi:
+            self.idMap[n.id]=n
+            self._grafo.add_node(n)
 
-        tmp = DAO.getEdges(anno, giorni, self.idMap)
-        for e in tmp:
-            self.edges.append(e)
-            self.graph.add_edge(e[0], e[1], weight=e[2])
+        for e in DAO.getArchi(anno, giorni):
+            self._grafo.add_edge(self.idMap[e[0]], self.idMap[e[1]], weight= e[2])
 
-    def getGraphSize(self):
-        return len(self.nodes), len(self.edges)
 
-    def getAdiacenti(self):
-        adiacenza = []
-        for n in self.nodes:
-            peso = 0
-            for v in self.graph[n]:
-                peso += self.graph[n][v]['weight']
-            adiacenza.append((n, peso))
-        return adiacenza
+    def getSommaPesi(self):
+        self.somPesiNodi = []
+        for n in self._grafo.nodes:
+            somma=0
+            for n1 in self._grafo[n]:
+                somma+= self._grafo[n][n1]['weight']
+            self.somPesiNodi.append((n.id,somma))
+        return self.somPesiNodi
+
+
+    def getNumNodi(self):
+        return len(self._grafo.nodes)
+
+    def getNumArchi(self):
+        return len(self._grafo.edges)
+

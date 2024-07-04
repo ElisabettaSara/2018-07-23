@@ -4,13 +4,14 @@ from model.state import State
 
 class DAO():
 
+
     @staticmethod
-    def getAnni():
+    def getAnno():
         conn = DBConnect.get_connection()
         result = []
         cursor = conn.cursor(dictionary=True)
-        query = """select distinct extract(year from s.datetime) as anno
-                    from sighting s"""
+        query = """select distinct year(`datetime`) as anno
+                    from sighting s """
 
         cursor.execute(query,)
         for row in cursor:
@@ -21,12 +22,12 @@ class DAO():
         return result
 
     @staticmethod
-    def getNodes():
+    def getNodi():
         conn = DBConnect.get_connection()
         result = []
         cursor = conn.cursor(dictionary=True)
         query = """select *
-                    from state s"""
+                    from state s """
 
         cursor.execute(query, )
         for row in cursor:
@@ -37,25 +38,23 @@ class DAO():
         return result
 
     @staticmethod
-    def getEdges(anno, giorni, idMap):
+    def getArchi(anno, giorni):
         conn = DBConnect.get_connection()
         result = []
         cursor = conn.cursor(dictionary=True)
-        query = """select state1, state2, count(*) as peso
-                    from neighbor n, sighting s1, sighting s2
-                    where n.state1 < n.state2
-                    and s1.state = n.state1 and s2.state = n.state2
-                    and extract(year from s1.`datetime`) = %s 
-                    and extract(year from s2.`datetime`) = %s
-                    and abs(datediff(s1.`datetime`, s2.`datetime`)) <= %s
-                    group by state1, state2"""
+        query = """select n.state1 as stato1, n.state2 as stato2, count(*) as peso
+                    from neighbor n , sighting s1, sighting s2  
+                    where n.state1 =s1.state  and n.state2 =s2.state 
+                          and year(s1.`datetime` )=%s and year(s2.`datetime` )=%s
+                          and abs(datediff(s1.`datetime`, s2.`datetime`))<=%s 
+                          and s1.state<s2.state
+                    group by n.state1 , n.state2  """
 
-        cursor.execute(query, (anno, anno, giorni))
+        cursor.execute(query, (anno, anno, giorni,) )
         for row in cursor:
-            result.append((idMap[row['state1']],
-                           idMap[row['state2']],
-                           row['peso']))
+            result.append((row['stato1'], row['stato2'], row['peso']))
 
         cursor.close()
         conn.close()
         return result
+

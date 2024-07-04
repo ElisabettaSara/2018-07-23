@@ -9,30 +9,29 @@ class Controller:
         self._model = model
 
     def fillDD(self):
-        anni = self._model.listAnni
-        for a in anni:
-            self._view.ddyear.options.append(ft.dropdown.Option(a))
+        for n in self._model.getAnni():
+            self._view.ddyear.options.append(ft.dropdown.Option(n))
+
 
     def handle_graph(self, e):
-        try:
-            giorni = int(self._view.txtGiorni.value)
-        except ValueError:
-            self._view.create_alert("Inserire un numer di giorni intero")
-            return
-
-        if self._view.ddyear.value is None:
-            self._view.create_alert("Inserire un anno")
-            return
-        else:
-            anno = self._view.ddyear.value
-
-        self._model.buildGraph(anno, giorni)
-        nN, nE = self._model.getGraphSize()
         self._view.txt_result.clean()
-        self._view.txt_result.controls.append(ft.Text(f"Grafo creato con {nN} vertici e {nE} archi"))
-        adiacenze = self._model.getAdiacenti()
-        for i in adiacenze:
-            self._view.txt_result.controls.append(ft.Text(f"Nodo {i[0].id}, somma dei pesi= {i[1]}"))
+        giorni = self._view.txtGiorni.value
+        try:
+            intGiorni = int(giorni)
+        except ValueError:
+            self._view.txt_result.controls.append(ft.Text("Inserire un valore numerico intero"))
+
+        if (intGiorni)<1 or intGiorni>180:
+            self._view.txt_result.controls.append(ft.Text("Inserire un valore numerico intero compreso fra 1 e 180"))
+        anno = int(self._view.ddyear.value)
+
+        self._model.creaGrafo(anno, intGiorni)
+
+        sommaPesi=self._model.getSommaPesi()
+
+        for n in sommaPesi:
+            self._view.txt_result.controls.append(ft.Text(f"Nodo {n[0]} somma pesi = {n[1]}"))
+
         self._view.update_page()
 
     def handle_path(self, e):
